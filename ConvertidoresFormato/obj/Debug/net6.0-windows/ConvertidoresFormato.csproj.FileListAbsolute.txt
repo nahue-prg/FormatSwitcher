@@ -1,0 +1,17 @@
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\bin\Debug\net6.0-windows\ConvertidoresFormato.exe
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\bin\Debug\net6.0-windows\ConvertidoresFormato.deps.json
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\bin\Debug\net6.0-windows\ConvertidoresFormato.runtimeconfig.json
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\bin\Debug\net6.0-windows\ConvertidoresFormato.dll
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\bin\Debug\net6.0-windows\ConvertidoresFormato.pdb
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\obj\Debug\net6.0-windows\ConvertidoresFormato.csproj.AssemblyReference.cache
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\obj\Debug\net6.0-windows\ConvertidoresFormato.Form1.resources
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\obj\Debug\net6.0-windows\ConvertidoresFormato.csproj.GenerateResource.cache
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\obj\Debug\net6.0-windows\ConvertidoresFormato.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\obj\Debug\net6.0-windows\ConvertidoresFormato.AssemblyInfoInputs.cache
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\obj\Debug\net6.0-windows\ConvertidoresFormato.AssemblyInfo.cs
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\obj\Debug\net6.0-windows\ConvertidoresFormato.csproj.CoreCompileInputs.cache
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\obj\Debug\net6.0-windows\ConvertidoresFormato.dll
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\obj\Debug\net6.0-windows\refint\ConvertidoresFormato.dll
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\obj\Debug\net6.0-windows\ConvertidoresFormato.pdb
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\obj\Debug\net6.0-windows\ConvertidoresFormato.genruntimeconfig.cache
+C:\Users\juani\OneDrive\Escritorio\excel\ConvertidoresFormato\ConvertidoresFormato\obj\Debug\net6.0-windows\ref\ConvertidoresFormato.dll
