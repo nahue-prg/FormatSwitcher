@@ -17,6 +17,8 @@ namespace test
            // Conversor.ConvertExcelToCsv("C:\\Users\\Microtrack\\Desktop\\prueba.xlsx", "C:\\Users\\Microtrack\\Desktop\\convertido.sv");
 
            // Conversor.ConvertCsvToExcel("C:\\Users\\Microtrack\\Desktop\\convertido.sv","C:\\Users\\Microtrack\\Desktop\\prueba3.xlsx");
+
+            Assert.That(true);
         }
     }
 }

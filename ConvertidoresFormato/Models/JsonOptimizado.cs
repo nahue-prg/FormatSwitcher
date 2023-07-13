@@ -10,13 +10,13 @@
         /// </summary>
         public JsonOptimizado()
         {
-            this.tablas = new List<Tabla>();
+            this.tables = new List<Tabla>();
         }
 
         /// <summary>
         /// Tablas del modelo
         /// </summary>
-        public List<Tabla> tablas { get; set; }
+        public List<Tabla> tables { get; set; }
     }
 
     /// <summary>
@@ -29,37 +29,37 @@
         /// </summary>
         public Tabla()
         {
-            this.columnas = new();
-            this.filas = new();
+            this.columns = new();
+            this.rows = new();
         }
 
         /// <summary>
         /// Nombre de la tabla
         /// </summary>
-        public string nombre { get; set; }
+        public string name { get; set; }
         /// <summary>
         /// Columnas de la tabla
         /// </summary>
-        public List<Columna> columnas { get; set; }
+        public List<Column> columns { get; set; }
         /// <summary>
         /// Filas de la tabla
         /// </summary>
-        public List<List<string>> filas { get; set; }
+        public List<List<string>> rows { get; set; }
     }
 
     /// <summary>
     /// Columnas de la tabla 
     /// </summary>
-    public class Columna
+    public class Column
     {
         /// <summary>
         /// Nombre de la columna
         /// </summary>
-        public string nombre { get; set; }
+        public string name { get; set; }
         /// <summary>
         /// Tipo de dato de la columna
         /// </summary>
-        public string tipo { get; set; }
+        public string type { get; set; }
     }
 
 }

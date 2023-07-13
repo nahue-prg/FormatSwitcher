@@ -27,16 +27,42 @@ namespace ConvertidoresFormato.Code
                     rutaArchivo = openFileDialog.FileName;
                 }
             }
-            catch (Exception ex) { MessageBox.Show("Ocurrio un error inesperado: " + ex.Message); }
+            catch (Exception ex) { MessageBox.Show("Ocurrio un error inesperado: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
 
-            return rutaArchivo;
+                return rutaArchivo;
+        }
+
+        /// <summary>
+        /// Seleccionar una carptea 
+        /// </summary>
+        /// <returns></returns>
+        public static string SeleccionarCarpeta()
+        {
+            string rutaCarpeta = "";
+
+            try
+            {
+                FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
+                folderBrowserDialog.Description = "Seleccionar carpeta";
+
+                if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+                {
+                    rutaCarpeta = folderBrowserDialog.SelectedPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Ocurrió un error inesperado: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+
+            return rutaCarpeta;
         }
 
         /// <summary>
         /// Lee un archivo por medio de su ruta.
         /// </summary>
         /// <returns>Contenido del archivo</returns>
-        public static string leerArchivo(string rutaArchivo)
+        public static string LeerArchivo(string rutaArchivo)
         {
 
             string contenido = "";
@@ -70,5 +96,6 @@ namespace ConvertidoresFormato.Code
             string fileExtension = Path.GetExtension(rutaArchivo);
             return fileExtension;
         }
+
     }
 }

@@ -1,30 +1,122 @@
-﻿using Newtonsoft.Json;
+﻿using MathNet.Numerics.Interpolation;
+using Newtonsoft.Json;
 using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Text;
 using WebApiProactivo.Modelos;
 
 namespace ConvertidoresFormato.Code
 {
     public class Conversor
-    {
-        #region CSV
+    {   
+        /// <summary>
+        /// Armar y escribir archivo de salida. 
+        /// </summary>
+        /// <param name="rutaArchivoSeleccionado"></param>
+        /// <param name="rutaArchivoDestino"></param>
+        /// <param name="NombreArchivoSalida"></param>
+        /// <param name="formatoArchivoEntrada"></param>
+        /// <param name="formatoSalida"></param>
+        /// <param name="ForzarSeparadorEntrada"></param>
+        /// <param name="ForzarSeparadorSalida"></param>
+        /// <returns></returns>
+        public static bool ArmarArchivoSalida(string rutaArchivoSeleccionado, string rutaArchivoDestino, string NombreArchivoSalida, Formato_ formatoArchivoEntrada, Formato_ formatoSalida,string ForzarSeparadorEntrada, string ForzarSeparadorSalida)
+        {
+
+            string contentArchivo = "";
+
+            if (formatoArchivoEntrada == Formato_.XLSX)
+            {
+                contentArchivo = ConvertExcelToAny(rutaArchivoSeleccionado, Formato_.TSV);
+                formatoArchivoEntrada = Formato_.TSV;
+                ForzarSeparadorEntrada = Formato.GetCaracterFormato(Formato_.TSV);
+            }
+            else
+            {
+                contentArchivo = Funcionalidades.LeerArchivo(rutaArchivoSeleccionado);
+
+                if (formatoArchivoEntrada == Formato_.JSON)
+                {
+                    contentArchivo = ConvertJsonToString(contentArchivo, Formato.GetCaracterFormato(Formato_.TSV));
+                    formatoArchivoEntrada = Formato_.TSV;
+                    ForzarSeparadorEntrada = Formato.GetCaracterFormato(Formato_.TSV);
+                }
+            }
+
+            int filasAfectadas = 0;
+
+            string separadorEntrada = "";
+
+            string separadorSalida = "";
+
+            if (formatoArchivoEntrada == Formato_.CSV || formatoArchivoEntrada == Formato_.TSV){
+
+                if (string.IsNullOrEmpty(ForzarSeparadorEntrada))
+                    separadorEntrada = Formato.GetCaracterSeparador(contentArchivo, formatoArchivoEntrada)!;
+                else
+                    separadorEntrada = ForzarSeparadorEntrada;
+            }
+
+
+            if ((formatoSalida == Formato_.CSV || formatoSalida == Formato_.TSV)) { 
+
+                if(string.IsNullOrEmpty(ForzarSeparadorSalida))
+                    separadorSalida = Formato.GetCaracterFormato(formatoSalida);
+                else
+                    separadorSalida = ForzarSeparadorSalida;
+            }
+
+            //Armar ruta de salida para el archivo con nombre y extension.
+            rutaArchivoDestino +=$"\\{NombreArchivoSalida}.{Formato.ToString(formatoSalida)}";
+
+            switch (formatoSalida) {
+
+                case Formato_.CSV:
+                case Formato_.TSV:
+                    filasAfectadas = ConvertAndWriteStringToCsvOrTsv(contentArchivo, rutaArchivoDestino, separadorEntrada, separadorSalida);
+                    break;
+                  
+                case Formato_.JSON:
+                    filasAfectadas = ConvertAndWriteStringToJson(contentArchivo, rutaArchivoDestino, separadorEntrada);
+                    break;
+
+                case Formato_.JSONOPTIMIZADO:
+                    filasAfectadas = ConvertAndWriteCsvToOptimizedJson(contentArchivo, separadorEntrada, rutaArchivoDestino);
+                    break;
+
+                case Formato_.XLSX:
+                    filasAfectadas = ConvertAndWriteStringToExcel(contentArchivo, rutaArchivoDestino, separadorEntrada);
+                    break;
+                default:
+                    throw new Exception("Formato de salida desconocido.");
+                    break;
+            }
+
+            if (filasAfectadas > 0)
+                return true;
+    
+            return false; 
+        }
+
+
         /// <summary>
         /// Convertir archivo a excel
         /// </summary>
         /// <param name="stringContent"></param>
         /// <param name="excelFilePath"></param>
-        public static void ConvertAndWriteStringToExcel(string stringContent, string excelFilePath, string caracterSeparador)
+        public static int ConvertAndWriteStringToExcel(string stringContent, string excelFilePath, string caracterSeparador)
         {
             IWorkbook workbook = new XSSFWorkbook();
             ISheet sheet = workbook.CreateSheet("Sheet1");
+            int rowNumber = 0;
 
             using (StringReader reader = new StringReader(stringContent))
             {
                 string line;
-                int rowNumber = 0;
-                while ((line = reader.ReadLine()) != null)
+                
+                while ((line = reader.ReadLine()!) != null)
                 {
                     string[] cells = line.Split(caracterSeparador);
                     IRow row = sheet.CreateRow(rowNumber);
@@ -40,6 +132,8 @@ namespace ConvertidoresFormato.Code
             {
                 workbook.Write(fs, false);
             }
+
+            return rowNumber;
         }
 
         /// <summary>
@@ -50,7 +144,7 @@ namespace ConvertidoresFormato.Code
         /// <param name="caracterSeparador"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public static void ConvertAndWriteStringToJson(string stringContent, string jsonFilePath, string caracterSeparador)
+        public static int ConvertAndWriteStringToJson(string stringContent, string jsonFilePath, string caracterSeparador)
         {
             string[] lines = stringContent.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -76,6 +170,94 @@ namespace ConvertidoresFormato.Code
             string json = JsonConvert.SerializeObject(jsonData, Newtonsoft.Json.Formatting.Indented);
 
             File.WriteAllText(jsonFilePath, json);
+
+            return jsonData.Count;
+        }
+
+        /// <summary>
+        /// Convertir y escribir json en un archivo csv
+        /// </summary>
+        /// <param name="jsonContent"></param>
+        /// <param name="csvFilePath"></param>
+        /// <param name="caracterSeparador"></param>
+        /// <exception cref="ArgumentException"></exception>
+        public static int ConvertAndWriteJsonToCsv(string jsonContent, string csvFilePath, string caracterSeparador)
+        {
+            try
+            {
+                // Convertir el JSON a una lista de diccionarios
+                List<Dictionary<string, string>> jsonData = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(jsonContent);
+
+                // Obtener los encabezados del CSV a partir de las claves del primer diccionario
+                string[] headers = jsonData[0].Keys.ToArray();
+
+                // Crear una lista de cadenas para almacenar las líneas del CSV
+                List<string> csvLines = new List<string>();
+
+                // Agregar la primera línea al CSV con los encabezados
+                csvLines.Add(string.Join(caracterSeparador, headers));
+
+                // Recorrer los datos y convertirlos a líneas de CSV
+                foreach (var data in jsonData)
+                {
+                    // Obtener los valores de cada columna en el mismo orden que los encabezados
+                    string[] values = headers.Select(header => data[header]).ToArray();
+
+                    // Agregar la línea al CSV
+                    csvLines.Add(string.Join(caracterSeparador, values));
+                }
+
+                // Escribir el contenido del CSV en un archivo
+                File.WriteAllLines(csvFilePath, csvLines);
+
+                return csvLines.Count;
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Convertir json en string con contenido tipo csv. 
+        /// </summary>
+        /// <param name="jsonContent"></param>
+        /// <param name="caracterSeparador"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        public static string ConvertJsonToString(string jsonContent, string caracterSeparador)
+        {
+            try
+            {
+                // Convertir el JSON a una lista de diccionarios
+                List<Dictionary<string, string>> jsonData = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(jsonContent);
+
+                // Obtener los encabezados del CSV a partir de las claves del primer diccionario
+                string[] headers = jsonData[0].Keys.ToArray();
+
+                // Crear una lista de cadenas para almacenar las líneas del CSV
+                List<string> csvLines = new List<string>();
+
+                // Agregar la primera línea al CSV con los encabezados
+                csvLines.Add(string.Join(caracterSeparador, headers));
+
+                // Recorrer los datos y convertirlos a líneas de CSV
+                foreach (var data in jsonData)
+                {
+                    // Obtener los valores de cada columna en el mismo orden que los encabezados
+                    string[] values = headers.Select(header => data[header]).ToArray();
+
+                    // Agregar la línea al CSV
+                    csvLines.Add(string.Join(caracterSeparador, values));
+                }
+
+                // Retornar el contenido del CSV como una sola cadena
+                return string.Join(Environment.NewLine, csvLines);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException(ex.Message);
+            }
         }
 
         /// <summary>
@@ -86,16 +268,12 @@ namespace ConvertidoresFormato.Code
         /// <param name="formatoEntrada"></param>
         /// <param name="formatoSalida"></param>
         /// <exception cref="ArgumentException"></exception>
-        public static void ConvertAndWriteStringToCsvOrTsv(string stringContent, string filePath, Formato_ formatoEntrada, Formato_ formatoSalida )
+        public static int ConvertAndWriteStringToCsvOrTsv(string stringContent, string filePath, string separadorEntrada, string separadorSalida)
         {
-            string separadorSalida = Formato.GetCaracterFormato(formatoSalida);
-
             if (separadorSalida.Length == 0)
             {
                 throw new ArgumentException("El formato especificado no es valido para esta operacion");
             }
-
-            string separadorEntrada = Formato.GetCaracterFormato(formatoEntrada);
 
             if (separadorSalida.Length == 0)
             {
@@ -104,30 +282,41 @@ namespace ConvertidoresFormato.Code
 
             string[] lines = stringContent.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
 
+            int filasAfectadas = 0;
+
+            int cont = 1;
+
             using (StreamWriter writer = new StreamWriter(filePath))
             {
                 foreach (string line in lines)
                 {
+
                     string[] data = line.Split(separadorEntrada);
+                    
+                    if (data.Length < 2)
+                        throw new Exception($"El archivo contiene 1 campo o menos en la linea {cont}. La conversion no tiene efecto. Prueba cambiando el separador");
+
                     string formattedLine = string.Join(separadorSalida, data);
                     writer.WriteLine(formattedLine);
+                    cont++;
                 }
+
+                filasAfectadas = lines.Length;
             }
+
+            return filasAfectadas;
         }
 
         /// <summary>
         /// Convertir csv o tsv a json optimizado 
         /// </summary>
-        /// <param name="filePath"></param>
+        /// <param name="content"></param>
         /// <param name="caracterSeparador"></param>
-        /// <param name="isCsv"></param>
         /// <param name="jsonFilePath"></param>
         /// <exception cref="ArgumentException"></exception>
-        public static void ConvertCsvOrTsvToOptimizedJson(string content, Formato_ formato, string jsonFilePath)
+        public static int ConvertAndWriteCsvToOptimizedJson(string content, string caracterSeparador, string jsonFilePath)
         {
-            string separador = Formato.GetCaracterFormato(formato);
-
-            if (separador.Length == 0)
+            if (caracterSeparador.Length == 0)
             {
                 throw new ArgumentException("El formato especificado no es válido para esta operación.");
             }
@@ -139,23 +328,23 @@ namespace ConvertidoresFormato.Code
                 throw new ArgumentException("El archivo de entrada contener al menos dos líneas (encabezados y datos).");
             }
 
-            string[] headers = lines[0].Split(separador);
+            string[] headers = lines[0].Split(caracterSeparador);
 
             JsonOptimizado jsonOptimizado = new JsonOptimizado();
             Tabla tabla = new Tabla();
-            tabla.nombre = "Tabla";
+            tabla.name = "Tabla";
 
             for (int i = 0; i < headers.Length; i++)
             {
-                Columna columna = new Columna();
-                columna.nombre = headers[i];
-                columna.tipo = "string";
-                tabla.columnas.Add(columna);
+                Column columna = new Column();
+                columna.name = headers[i];
+                columna.type = "string";
+                tabla.columns.Add(columna);
             }
 
             for (int i = 1; i < lines.Length; i++)
             {
-                string[] data = lines[i].Split(separador);
+                string[] data = lines[i].Split(caracterSeparador);
 
                 if (data.Length != headers.Length)
                 {
@@ -163,15 +352,16 @@ namespace ConvertidoresFormato.Code
                 }
 
                 List<string> fila = new List<string>(data);
-                tabla.filas.Add(fila);
+                tabla.rows.Add(fila);
             }
 
-            jsonOptimizado.tablas.Add(tabla);
-
+            jsonOptimizado.tables.Add(tabla);
 
             string json = JsonConvert.SerializeObject(jsonOptimizado, Newtonsoft.Json.Formatting.Indented);
 
             File.WriteAllText(jsonFilePath, json);
+
+            return jsonOptimizado.tables[0].rows.Count();
         }
 
         /// <summary>
@@ -180,7 +370,7 @@ namespace ConvertidoresFormato.Code
         /// <param name="excelFilePath"></param>
         /// <param name="formato">Formato en el que se desea recibir la string, soporta csv y tsv</param>
         /// /// <returns>String con</returns>
-        public static string ConvertExcelToAny(string excelFilePath, Formato_ formato)
+        public static string ConvertExcelToAny(string content, Formato_ formato)
         {
             string separador = Formato.GetCaracterFormato(formato);
 
@@ -188,10 +378,7 @@ namespace ConvertidoresFormato.Code
             {
                 throw new ArgumentException("El formato especificado no es valido para esta operacion");
             }
-
-            using (FileStream file = new FileStream(excelFilePath, FileMode.Open, FileAccess.Read))
-            {
-                IWorkbook workbook = new XSSFWorkbook(file);
+                IWorkbook workbook = new XSSFWorkbook(content);
                 ISheet sheet = workbook.GetSheetAt(0); // Suponemos que es la primera hoja del libro
 
                 StringWriter stringWriter = new StringWriter();
@@ -208,7 +395,7 @@ namespace ConvertidoresFormato.Code
                             ICell cell = row.GetCell(j);
                             if (cell != null)
                             {
-                                string cellValue = cell.ToString();
+                                string cellValue = cell.ToString()!;
                                 stringWriter.Write(cellValue);
                             }
                             if (j < cellCount - 1)
@@ -219,12 +406,8 @@ namespace ConvertidoresFormato.Code
                         stringWriter.WriteLine();
                     }
                 }
-
                 return stringWriter.ToString();
-            }
-        }
-
-        #endregion
+           }
 
     }
 }
