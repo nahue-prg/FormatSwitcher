@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ConvertidoresFormato.Code
+﻿namespace ConvertidoresFormato.Code
 {
     public class Formato
     {
@@ -119,7 +111,6 @@ namespace ConvertidoresFormato.Code
             };
 
             throw new ArgumentException("La cantidad de columnas no coincide, el archivo no es valido.");
-            return null; // No se encontro ningun caracter separador valido. 
         }
 
         /// <summary>
